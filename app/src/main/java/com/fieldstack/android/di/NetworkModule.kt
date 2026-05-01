@@ -30,13 +30,26 @@ object NetworkModule {
      *     openssl dgst -sha256 -binary | base64
      * Include at least two pins (leaf + backup/intermediate) to allow rotation.
      *
-     * TODO: Replace placeholder values with real SHA-256 SPKI pins before releasing to production.
-     *       Until replaced, certificate pinning is effectively disabled and MITM attacks are possible.
+     * REQUIRED: Replace placeholder values with real SHA-256 SPKI pins before releasing to production.
+     *           Until replaced, certificate pinning is effectively disabled and MITM attacks are possible.
+     *           The app will throw IllegalStateException on startup in non-debug builds if placeholders remain.
      */
     private val CERT_PINNER = CertificatePinner.Builder()
         .add("api.fieldstack.com", "sha256/REPLACE_WITH_LEAF_CERT_PIN=")
         .add("api.fieldstack.com", "sha256/REPLACE_WITH_BACKUP_CERT_PIN=")
         .build()
+
+    /** Throws at startup in non-debug builds if placeholder pins have not been replaced. */
+    private fun checkCertPinsConfigured() {
+        if (!BuildConfig.DEBUG) {
+            val placeholders = listOf("sha256/REPLACE_WITH_LEAF_CERT_PIN=", "sha256/REPLACE_WITH_BACKUP_CERT_PIN=")
+            check(placeholders.none { it.contains("REPLACE_WITH") }) {
+                "SECURITY: Certificate pins are still placeholders. " +
+                "Replace REPLACE_WITH_LEAF_CERT_PIN and REPLACE_WITH_BACKUP_CERT_PIN " +
+                "in NetworkModule before shipping to production."
+            }
+        }
+    }
 
     @Provides @Singleton
     fun provideMoshi(): Moshi = Moshi.Builder()
@@ -44,8 +57,9 @@ object NetworkModule {
         .build()
 
     @Provides @Singleton
-    fun provideOkHttp(session: SessionManager): OkHttpClient =
-        OkHttpClient.Builder()
+    fun provideOkHttp(session: SessionManager): OkHttpClient {
+        checkCertPinsConfigured()
+        return OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(session))
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS
@@ -62,6 +76,7 @@ object NetworkModule {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
+    }
 
     @Provides @Singleton
     fun provideRetrofit(okHttp: OkHttpClient, moshi: Moshi): Retrofit =

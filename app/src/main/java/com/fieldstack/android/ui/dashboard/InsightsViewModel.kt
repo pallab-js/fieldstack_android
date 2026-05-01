@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
@@ -52,6 +53,7 @@ class InsightsViewModel @Inject constructor(
             }
             ExportState.Done(file)
         } catch (e: Exception) {
+            Timber.e(e, "CSV export failed")
             ExportState.Error(e.message ?: "Export failed")
         }
     }

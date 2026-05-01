@@ -88,7 +88,8 @@ class SessionManager @Inject constructor(@ApplicationContext private val ctx: Co
                 val payload = jwt.split(".").getOrNull(1) ?: return null
                 val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING)
                 JSONObject(String(decoded)).optString(claim).takeIf { it.isNotEmpty() }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.w("SessionManager", "Failed to parse JWT claim '$claim'", e)
                 null
             }
         }

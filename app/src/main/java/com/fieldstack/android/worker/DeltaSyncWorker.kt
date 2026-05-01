@@ -14,6 +14,7 @@ import com.fieldstack.android.util.AppPrefsStore
 import com.fieldstack.android.util.SessionManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import timber.log.Timber
 
 @HiltWorker
 class DeltaSyncWorker @AssistedInject constructor(
@@ -51,6 +52,7 @@ class DeltaSyncWorker @AssistedInject constructor(
             repository.syncPendingChanges()
             Result.success()
         } catch (e: Exception) {
+            Timber.e(e, "DeltaSyncWorker failed on attempt %d", runAttemptCount)
             if (runAttemptCount < SyncWorker.MAX_RETRIES) Result.retry() else Result.failure()
         }
     }
