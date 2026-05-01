@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.play.publisher)
+    alias(libs.plugins.owasp.dependencycheck)
+}
+
+// Lock all resolvable dependency configurations to prevent silent transitive upgrades.
+// Regenerate lockfiles after any dependency change:
+//   ./gradlew :app:dependencies --write-locks
+dependencyLocking {
+    lockAllConfigurations()
 }
 
 android {
@@ -147,6 +155,7 @@ dependencies {    // Core
 
     // Image loading
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)  // Coil 3 requires explicit network fetcher
     implementation(libs.mlkit.barcode)
 
     // Testing

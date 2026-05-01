@@ -31,7 +31,11 @@ Offline-first field operations management app for Android. Built with Kotlin, Je
 1. Clone the repo
 2. Add `google-services.json` to `app/` (from Firebase Console)
 3. Add `local.properties` with your SDK path
-4. Run on a device or emulator:
+4. Generate dependency lockfiles (first time, and after any version change):
+   ```bash
+   ./gradlew :app:dependencies --write-locks
+   ```
+5. Run on a device or emulator:
 
 ```bash
 ./gradlew :app:installDebug

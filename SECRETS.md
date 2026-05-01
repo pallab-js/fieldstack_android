@@ -10,6 +10,7 @@ Set these in **Settings → Secrets and variables → Actions** before pushing a
 | `KEY_PASSWORD` | Key password |
 | `FIREBASE_APP_ID` | Firebase App ID (from Firebase Console) |
 | `FIREBASE_SERVICE_ACCOUNT` | Contents of Firebase service account JSON |
+| `NVD_API_KEY` | NVD API key for OWASP dependency-check (get free key at https://nvd.nist.gov/developers/request-an-api-key) |
 
 ## Generate a keystore (first time)
 
