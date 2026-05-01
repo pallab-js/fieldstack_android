@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import timber.log.Timber
 import java.io.File
 import java.net.URI
 import java.time.Instant
@@ -140,12 +141,15 @@ class RealFieldStackRepository @Inject constructor(
                                     else                         -> null
                                 }
                                 file?.takeIf { it.exists() }?.delete()
-                            } catch (_: Exception) { /* best-effort */ }
+                            } catch (ex: Exception) {
+                                Timber.w(ex, "Failed to delete local photo after sync: %s", uriStr)
+                            }
                         }
                     }
                 }
                 syncQueueDao.markSynced(item.id)
             } catch (e: Exception) {
+                Timber.e(e, "Sync failed for %s/%s (op=%s)", item.entityType, item.entityId, item.operation)
                 syncQueueDao.markFailed(item.id)
                 failed++
             }

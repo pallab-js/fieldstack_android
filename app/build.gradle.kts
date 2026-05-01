@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.play.publisher)
     alias(libs.plugins.owasp.dependencycheck)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 // Lock all resolvable dependency configurations to prevent silent transitive upgrades.
@@ -47,7 +49,9 @@ android {
             applicationIdSuffix = ".staging"
             isDebuggable = false
             isMinifyEnabled = true
-            signingConfig = signingConfigs.findByName("debug")
+            // Use a dedicated staging signing config if provided; fall back to release config.
+            // Never use the debug keystore for staging — it allows sideloading alongside prod.
+            signingConfig = signingConfigs.findByName("staging") ?: signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -157,6 +161,12 @@ dependencies {    // Core
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)  // Coil 3 requires explicit network fetcher
     implementation(libs.mlkit.barcode)
+
+    // Logging / Crash reporting
+    implementation(libs.timber)
+    val firebaseBom = platform(libs.firebase.bom)
+    implementation(firebaseBom)
+    implementation(libs.firebase.crashlytics)
 
     // Testing
     testImplementation(libs.junit)

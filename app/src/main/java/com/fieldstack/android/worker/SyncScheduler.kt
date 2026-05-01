@@ -46,6 +46,8 @@ class SyncScheduler @Inject constructor(
     fun schedulePeriodicDeltaSync(requireWifi: Boolean = false, intervalMinutes: Long = 15) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(if (requireWifi) NetworkType.UNMETERED else NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
+            .setRequiresStorageNotLow(true)
             .build()
         val request = PeriodicWorkRequestBuilder<DeltaSyncWorker>(intervalMinutes, TimeUnit.MINUTES)
             .setConstraints(constraints)

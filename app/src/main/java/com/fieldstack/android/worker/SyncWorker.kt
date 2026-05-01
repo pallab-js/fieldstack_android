@@ -8,6 +8,7 @@ import com.fieldstack.android.data.repository.FieldStackRepository
 import com.fieldstack.android.data.repository.SyncState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import timber.log.Timber
 
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
@@ -18,13 +19,16 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            when (repository.syncPendingChanges()) {
+            when (val state = repository.syncPendingChanges()) {
                 is SyncState.Synced -> Result.success()
-                is SyncState.Error  -> if (runAttemptCount < MAX_RETRIES) Result.retry()
-                                       else Result.failure()
-                else                -> Result.success()
+                is SyncState.Error  -> {
+                    Timber.e("SyncWorker: %s (attempt %d)", state.message, runAttemptCount)
+                    if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
+                }
+                else -> Result.success()
             }
         } catch (e: Exception) {
+            Timber.e(e, "SyncWorker failed on attempt %d", runAttemptCount)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
     }
