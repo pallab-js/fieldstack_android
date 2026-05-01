@@ -1,0 +1,79 @@
+name: Android Release
+
+on:
+  push:
+    tags: [ "v*.*.*" ]
+  workflow_dispatch:   # allow manual trigger for dry-runs
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDevDebugUnitTest --no-daemon
+
+  build:
+    needs: test
+    runs-on: macos-latest   # M1 runner for arm64 builds
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Decode keystore
+        run: echo "${{ secrets.SIGNING_KEY_BASE64 }}" | base64 -d > keystore.jks
+
+      - name: Build prod release APK
+        run: |
+          ./gradlew :app:assembleProdRelease \
+            -Pandroid.injected.signing.store.file=keystore.jks \
+            -Pandroid.injected.signing.store.password="${{ secrets.STORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}" \
+            --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fieldstack-android-${{ github.ref_name }}
+          path: app/build/outputs/apk/prod/release/app-prod-release.apk
+          retention-days: 30
+
+  firebase-distribute:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build dev debug for Firebase
+        run: ./gradlew :app:assembleDevDebug --no-daemon
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: internal-qa
+          file: app/build/outputs/apk/dev/debug/app-dev-debug.apk
+          releaseNotes: "Build ${{ github.ref_name }} — ${{ github.sha }}"

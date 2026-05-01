@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window theme — Compose takes over immediately; this just sets the window background -->
+    <style name="Theme.FieldStack" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FAFFFE</item>
+        <item name="android:statusBarColor">#FAFFFE</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+    </style>
+</resources>
