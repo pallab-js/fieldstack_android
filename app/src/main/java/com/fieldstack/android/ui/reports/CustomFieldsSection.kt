@@ -108,7 +108,7 @@ fun CustomFieldsSection(
                 Spacer(Modifier.height(6.dp))
                 ZenTextField(
                     value = newLabel,
-                    onValueChange = { newLabel = it },
+                    onValueChange = { if (it.length <= 64) newLabel = it },
                     label = "Field Label",
                     placeholder = "e.g. Serial Number",
                     contentDesc = "New field label",

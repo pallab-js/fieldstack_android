@@ -28,7 +28,7 @@ class CommentViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun addComment(taskId: String, body: String) = viewModelScope.launch {
-        if (body.isBlank()) return@launch
+        if (body.isBlank() || body.length > 2000) return@launch
         val userId = session.userId ?: return@launch
         dao.insert(
             Comment(
