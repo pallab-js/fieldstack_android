@@ -21,7 +21,7 @@ interface FieldStackApi {
     @PUT("tasks/{id}/status")
     suspend fun updateTaskStatus(
         @Path("id") id: String,
-        @Query("status") status: String,
+        @Body body: TaskStatusRequest,  // was @Query — status in query params appears in server logs
     ): TaskDto
 
     @POST("reports")

@@ -4,6 +4,13 @@
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api.fieldstack.com</domain>
     </domain-config>
+    <!--
+        Debug builds trust only system CAs (not user-installed CAs).
+        To use Charles/Proxyman, install the proxy CA into the system trust store
+        (requires a rooted device or emulator with writable /system).
+        Do NOT add <certificates src="user"/> here — it would allow any user-installed
+        CA to intercept traffic and must never be committed.
+    -->
     <debug-overrides>
         <trust-anchors>
             <certificates src="system" />

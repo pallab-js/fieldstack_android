@@ -23,12 +23,15 @@ import javax.inject.Singleton
 object NetworkModule {
 
     /**
-     * Fix #9: Certificate pins for api.fieldstack.com.
+     * Certificate pins for api.fieldstack.com.
      * Obtain the current pin by running:
      *   openssl s_client -connect api.fieldstack.com:443 | \
      *     openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
      *     openssl dgst -sha256 -binary | base64
      * Include at least two pins (leaf + backup/intermediate) to allow rotation.
+     *
+     * TODO: Replace placeholder values with real SHA-256 SPKI pins before releasing to production.
+     *       Until replaced, certificate pinning is effectively disabled and MITM attacks are possible.
      */
     private val CERT_PINNER = CertificatePinner.Builder()
         .add("api.fieldstack.com", "sha256/REPLACE_WITH_LEAF_CERT_PIN=")

@@ -46,12 +46,16 @@ data class CustomFieldDto(
 data class LoginRequest(val email: String, val password: String)
 
 @JsonClass(generateAdapter = true)
+data class TaskStatusRequest(val status: String)
+
+@JsonClass(generateAdapter = true)
 data class LoginResponse(
     val token: String,
     @Json(name = "user_id") val userId: String,
     val name: String,
     val email: String = "",
-    val role: String = "FieldTech",
+    // role is intentionally omitted — role is read from the JWT claims in SessionManager,
+    // never from this response field, to prevent a server from escalating privileges via JSON.
 )
 
 @JsonClass(generateAdapter = true)
@@ -69,4 +73,11 @@ data class UserDto(
 )
 
 @JsonClass(generateAdapter = true)
-data class RoleUpdateRequest(val role: String)
+data class RoleUpdateRequest(val role: String) {
+    init {
+        // Validate at construction time so an invalid role string never reaches the wire.
+        require(role in com.fieldstack.android.domain.model.UserRole.entries.map { it.name }) {
+            "Invalid role: $role"
+        }
+    }
+}

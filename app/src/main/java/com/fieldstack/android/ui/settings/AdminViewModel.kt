@@ -32,6 +32,8 @@ class AdminViewModel @Inject constructor(
     init { loadUsers() }
 
     private fun loadUsers() = viewModelScope.launch {
+        // Client-side guard: prevents accidental UI exposure, but is NOT a security boundary.
+        // The server must independently enforce Admin role on GET /admin/users and PUT /admin/users/{id}/role.
         if (session.userRole != UserRole.Admin) {
             _uiState.update { it.copy(error = "Access denied") }
             return@launch
@@ -54,6 +56,7 @@ class AdminViewModel @Inject constructor(
     }
 
     fun assignRole(userId: String, role: UserRole) = viewModelScope.launch {
+        // Client-side guard only — server enforces this independently.
         if (session.userRole != UserRole.Admin) {
             _uiState.update { it.copy(error = "Access denied") }
             return@launch

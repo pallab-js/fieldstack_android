@@ -40,10 +40,12 @@ class DeltaSyncWorker @AssistedInject constructor(
                 val mergeResult = mergeTasks(localMap, remoteDelta)
                 mergeResult.toUpsert.forEach { taskDao.upsert(it.toEntity()) }
 
-                // Clamp to [30 days ago, 1 minute from now] to guard against malicious/corrupt server timestamps
+                // Clamp to [24 hours ago, 1 minute from now].
+                // 30-day lower bound was too wide — a malicious/corrupt server timestamp
+                // could force a full 30-day re-fetch on every sync cycle (DoS).
                 val now = System.currentTimeMillis()
                 val serverTs = remoteDelta.maxOf { it.updatedAt.toEpochMilli() }
-                    .coerceIn(now - 30L * 24 * 3600 * 1000, now + 60_000L)
+                    .coerceIn(now - 24L * 3600 * 1000, now + 60_000L)
                 prefs.setLastSyncTimestamp(serverTs)
             }
 

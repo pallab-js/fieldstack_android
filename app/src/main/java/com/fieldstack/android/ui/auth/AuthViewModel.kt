@@ -32,6 +32,14 @@ class AuthViewModel @Inject constructor(
     val isLoggedIn: Boolean get() = session.isLoggedIn
     val userRole: UserRole get() = session.userRole
 
+    /** Call on app resume to detect a token that expired while the app was backgrounded. */
+    fun checkSession() {
+        if (session.token != null && !session.isLoggedIn) {
+            session.clear()
+            _state.value = LoginUiState.Error("Your session has expired. Please log in again.")
+        }
+    }
+
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
             _state.value = LoginUiState.Error("Email and password are required")
