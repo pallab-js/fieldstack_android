@@ -29,3 +29,6 @@ Thumbs.db
 *.env
 secrets.properties
 firebase-service-account.json
+
+# Graphify output
+graphify-out/
