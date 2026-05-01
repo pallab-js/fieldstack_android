@@ -33,6 +33,9 @@ class InsightsViewModel @Inject constructor(
             appendLine("Completion Rate,${(data.completionRate * 100).toInt()}%")
             appendLine("Week Ending,${LocalDate.now()}")
         }
+        // Remove any previously exported CSV files before writing a new one
+        ctx.filesDir.listFiles { f -> f.name.startsWith("insights_") && f.name.endsWith(".csv") }
+            ?.forEach { it.delete() }
         return File(ctx.filesDir, "insights_${LocalDate.now()}.csv")
             .also { it.writeText(csv) }
     }

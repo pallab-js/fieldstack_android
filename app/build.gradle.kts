@@ -34,6 +34,17 @@ android {
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
+        create("staging") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".staging"
+            isDebuggable = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.findByName("debug")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(
@@ -62,7 +73,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
 
     compileOptions {

@@ -31,9 +31,18 @@ object NetworkModule {
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(session))
             .addInterceptor(HttpLoggingInterceptor().apply {
-                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS
                         else HttpLoggingInterceptor.Level.NONE
+                redactHeader("Authorization")
+                redactHeader("Cookie")
             })
+            .authenticator { _, response ->
+                // On 401, clear session so the app redirects to login on next navigation
+                if (response.code == 401) {
+                    session.clear()
+                }
+                null // cancel the request; UI observes session.isLoggedIn
+            }
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()

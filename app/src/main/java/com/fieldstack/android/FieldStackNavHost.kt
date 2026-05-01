@@ -171,8 +171,12 @@ fun FieldStackNavHost() {
                 ReportBuilderScreen(taskId = taskId)
             }
             composable(Screen.Insights.route) { InsightsScreen() }
-            composable(Screen.Admin.route)   {
-                com.fieldstack.android.ui.settings.AdminScreen()
+            composable(Screen.Admin.route) {
+                if (authViewModel.userRole != com.fieldstack.android.domain.model.UserRole.Admin) {
+                    androidx.compose.runtime.LaunchedEffect(Unit) { navController.popBackStack() }
+                } else {
+                    com.fieldstack.android.ui.settings.AdminScreen()
+                }
             }
         }
     }
