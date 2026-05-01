@@ -37,6 +37,7 @@ data class ReportEntity(
     val createdAt: Instant,
     val updatedAt: Instant,
     val syncStatus: SyncStatus,
+    val customFields: List<com.fieldstack.android.domain.model.CustomField> = emptyList(),
 )
 
 @Entity(tableName = "sync_queue")

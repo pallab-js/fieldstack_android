@@ -34,6 +34,7 @@ data class Report(
     val createdAt: Instant,
     val updatedAt: Instant,
     val syncStatus: SyncStatus = SyncStatus.Pending,
+    val customFields: List<CustomField> = emptyList(),
 )
 
 data class User(

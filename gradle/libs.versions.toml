@@ -1,32 +1,32 @@
 [versions]
-agp = "8.2.2"
-kotlin = "1.9.22"
-ksp = "1.9.22-1.0.17"
-compose-bom = "2024.02.00"
-core-ktx = "1.12.0"
-lifecycle = "2.7.0"
-navigation = "2.7.7"
-room = "2.6.1"
-hilt = "2.48.1"
-hilt-navigation = "1.1.0"
-workmanager = "2.9.0"
-retrofit = "2.9.0"
+agp = "8.10.0"
+kotlin = "2.1.20"
+ksp = "2.1.20-1.0.32"
+compose-bom = "2026.04.01"
+core-ktx = "1.16.0"
+lifecycle = "2.9.0"
+navigation = "2.9.0"
+room = "2.7.1"
+hilt = "2.56.1"
+hilt-navigation = "1.2.0"
+workmanager = "2.10.1"
+retrofit = "2.11.0"
 okhttp = "4.12.0"
-moshi = "1.15.1"
-credentials = "1.2.0"
-biometric = "1.2.0-alpha05"
-camerax = "1.3.1"
-location = "21.1.0"
-datastore = "1.0.0"
-security-crypto = "1.1.0-alpha06"
-coil = "2.6.0"
+moshi = "1.15.2"
+credentials = "1.5.0"
+biometric = "1.1.0"
+camerax = "1.4.2"
+location = "21.3.0"
+datastore = "1.1.4"
+security-crypto = "1.1.0"
+coil = "2.7.0"
 mlkit-barcode = "17.3.0"
 junit = "4.13.2"
-junit-ext = "1.1.5"
-espresso = "3.5.1"
-turbine = "1.0.0"
-mockk = "1.13.9"
-coroutines-test = "1.7.3"
+junit-ext = "1.2.1"
+espresso = "3.6.1"
+turbine = "1.2.0"
+mockk = "1.13.17"
+coroutines-test = "1.10.2"
 mockwebserver = "4.12.0"
 
 [libraries]
@@ -53,8 +53,8 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation" }
-hilt-work = { group = "androidx.hilt", name = "hilt-work", version = "1.1.0" }
-hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.1.0" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version = "1.2.0" }
+hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.2.0" }
 
 workmanager = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workmanager" }
 workmanager-testing = { group = "androidx.work", name = "work-testing", version.ref = "workmanager" }
@@ -66,7 +66,7 @@ moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.re
 moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
-biometric = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometric" }
+biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }

@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SessionManager @Inject constructor(@ApplicationContext ctx: Context) {
+class SessionManager @Inject constructor(@ApplicationContext private val ctx: Context) {
 
     private val prefs = EncryptedSharedPreferences.create(
         ctx,
@@ -38,7 +38,14 @@ class SessionManager @Inject constructor(@ApplicationContext ctx: Context) {
 
     val isLoggedIn: Boolean get() = token != null
 
-    fun clear() = prefs.edit().clear().apply()
+    fun clear() {
+        prefs.edit().clear().apply()
+        // Delete cached photo/compressed files
+        ctx.cacheDir.listFiles()?.forEach { it.delete() }
+        // Delete exported CSV files
+        ctx.filesDir.listFiles { f -> f.name.startsWith("insights_") && f.name.endsWith(".csv") }
+            ?.forEach { it.delete() }
+    }
 
     companion object {
         private const val KEY_TOKEN     = "auth_token"

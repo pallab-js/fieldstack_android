@@ -36,4 +36,15 @@ interface FieldStackApi {
         @Query("user_id") userId: String,
         @Query("since") since: Long,
     ): List<TaskDto>
+
+    // ── Admin ──────────────────────────────────────────────────────────────
+
+    @GET("admin/users")
+    suspend fun getUsers(): List<UserDto>
+
+    @PUT("admin/users/{id}/role")
+    suspend fun updateUserRole(
+        @Path("id") id: String,
+        @Body body: RoleUpdateRequest,
+    ): UserDto
 }

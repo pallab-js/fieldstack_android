@@ -30,16 +30,42 @@ data class ReportDto(
     @Json(name = "signature_uri") val signatureUri: String? = null,
     @Json(name = "created_at") val createdAt: Long,
     @Json(name = "updated_at") val updatedAt: Long,
+    @Json(name = "custom_fields") val customFields: List<CustomFieldDto> = emptyList(),
+)
+
+@JsonClass(generateAdapter = true)
+data class CustomFieldDto(
+    val id: String,
+    val label: String,
+    val type: String,
+    val value: String = "",
+    val required: Boolean = false,
 )
 
 @JsonClass(generateAdapter = true)
 data class LoginRequest(val email: String, val password: String)
 
 @JsonClass(generateAdapter = true)
-data class LoginResponse(val token: String, @Json(name = "user_id") val userId: String, val name: String)
+data class LoginResponse(
+    val token: String,
+    @Json(name = "user_id") val userId: String,
+    val name: String,
+    val role: String = "FieldTech",
+)
 
 @JsonClass(generateAdapter = true)
 data class SubmitReportResponse(@Json(name = "server_id") val serverId: String)
 
 @JsonClass(generateAdapter = true)
 data class ApiError(val message: String, val code: Int = 0)
+
+@JsonClass(generateAdapter = true)
+data class UserDto(
+    val id: String,
+    val name: String,
+    val email: String,
+    val role: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class RoleUpdateRequest(val role: String)

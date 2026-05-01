@@ -12,6 +12,9 @@ interface ReportDao {
     @Query("SELECT * FROM reports WHERE taskId = :taskId ORDER BY createdAt DESC")
     fun observeByTask(taskId: String): Flow<List<ReportEntity>>
 
+    @Query("SELECT * FROM reports WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): ReportEntity?
+
     @Query("SELECT * FROM reports WHERE syncStatus = 'Pending' ORDER BY createdAt ASC")
     fun observePending(): Flow<List<ReportEntity>>
 
