@@ -41,11 +41,14 @@ class ImageCompressor @Inject constructor() {
         }
         if (scaled !== original) scaled.recycle()
         original.recycle()
-        // Delete the source file if it lives in cacheDir (e.g. raw camera capture)
-        val sourceFile = runCatching { File(uri.path!!) }.getOrNull()
-        if (sourceFile != null && sourceFile != outFile &&
-            sourceFile.canonicalPath.startsWith(context.cacheDir.canonicalPath)) {
-            sourceFile.delete()
+        // Delete the source file if it lives in cacheDir (e.g. raw camera capture).
+        // Only attempt deletion for file:// URIs — content:// URIs have no real filesystem path.
+        if (uri.scheme == "file") {
+            val sourceFile = File(uri.path ?: return@withContext outFile.toUri())
+            if (sourceFile.canonicalPath.startsWith(context.cacheDir.canonicalPath) &&
+                sourceFile != outFile) {
+                sourceFile.delete()
+            }
         }
         outFile.toUri()
     }

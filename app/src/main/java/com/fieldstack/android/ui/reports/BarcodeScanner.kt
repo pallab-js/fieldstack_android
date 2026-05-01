@@ -99,10 +99,14 @@ fun BarcodeScanner(
                                 mediaImage, proxy.imageInfo.rotationDegrees)
                             scanner.process(image)
                                 .addOnSuccessListener { barcodes ->
-                                    barcodes.firstOrNull()?.rawValue?.let { value ->
-                                        lastResult = value
-                                        onResult(value)
-                                    }
+                                    barcodes.firstOrNull()?.rawValue
+                                        ?.take(256)
+                                        ?.filter { it.isLetterOrDigit() || it in "-_./: " }
+                                        ?.takeIf { it.isNotBlank() }
+                                        ?.let { value ->
+                                            lastResult = value
+                                            onResult(value)
+                                        }
                                 }
                                 .addOnCompleteListener { proxy.close() }
                         } else {
