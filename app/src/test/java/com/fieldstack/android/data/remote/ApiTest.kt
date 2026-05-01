@@ -40,7 +40,7 @@ class ApiTest {
         server.enqueue(MockResponse()
             .setBody("""{"token":"tok-123","user_id":"u1","name":"Alex"}""")
             .setResponseCode(200))
-        val resp = api.login(LoginRequest("alex@fieldstack.com", "secret"))
+        val resp = api.login(LoginRequest("test@example.invalid", "not-a-real-password"))
         assertEquals("tok-123", resp.token)
         assertEquals("Alex", resp.name)
     }
@@ -52,7 +52,7 @@ class ApiTest {
                 |"assignee_id":"u1","priority":"high","status":"not_started",
                 |"due_at":1700000000000,"created_at":1699000000000,"updated_at":1699000000000}]""".trimMargin())
             .setResponseCode(200))
-        val tasks = api.getTasks("u1")
+        val tasks = api.getTasks()
         assertEquals(1, tasks.size)
         assertEquals("t1", tasks[0].id)
     }
@@ -77,7 +77,7 @@ class ApiTest {
                 |"assignee_id":"u1","priority":"medium","status":"in_progress",
                 |"due_at":1700000000000,"created_at":1699000000000,"updated_at":1700500000000}]""".trimMargin())
             .setResponseCode(200))
-        val delta = api.getTasksDelta("u1", since = 1700000000000L)
+        val delta = api.getTasksDelta(since = 1700000000000L)
         assertEquals(1, delta.size)
         assertEquals("t2", delta[0].id)
         // Verify the request included the since param

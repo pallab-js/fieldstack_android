@@ -40,6 +40,10 @@ GitHub Actions will:
 ## Play Store upload (after internal testing)
 
 ```bash
-# Requires play-service-account.json in project root (gitignored)
+# Set the path via env var (never commit the file itself)
+export PLAY_SERVICE_ACCOUNT_PATH=/path/to/play-service-account.json
 ./gradlew :app:publishProdReleaseApk
+
+# Or pass as a Gradle property
+./gradlew :app:publishProdReleaseApk -Pplay.serviceAccountCredentials=/path/to/play-service-account.json
 ```

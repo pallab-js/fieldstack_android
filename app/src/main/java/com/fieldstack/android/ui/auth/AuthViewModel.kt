@@ -32,10 +32,6 @@ class AuthViewModel @Inject constructor(
     val isLoggedIn: Boolean get() = session.isLoggedIn
     val userRole: UserRole get() = session.userRole
 
-    // Brute-force lockout state (in-memory; resets on process death which is acceptable)
-    private var failedAttempts = 0
-    private var lockedUntil = 0L
-
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
             _state.value = LoginUiState.Error("Email and password are required")
@@ -45,7 +41,8 @@ class AuthViewModel @Inject constructor(
             _state.value = LoginUiState.Error("Enter a valid email address")
             return
         }
-        val remaining = lockedUntil - System.currentTimeMillis()
+        // Fix #6: read lockout from persisted storage — survives process death
+        val remaining = session.lockedUntilMs - System.currentTimeMillis()
         if (remaining > 0) {
             _state.value = LoginUiState.Error("Too many attempts. Try again in ${remaining / 1000}s.")
             return
@@ -57,9 +54,10 @@ class AuthViewModel @Inject constructor(
                 session.token    = response.token
                 session.userId   = response.userId
                 session.userName = response.name
-                session.userRole = runCatching { UserRole.valueOf(response.role) }
-                    .getOrDefault(UserRole.FieldTech)
-                failedAttempts = 0
+                session.userEmail = response.email
+                // Fix #6: clear lockout on successful login
+                session.failedLoginAttempts = 0
+                session.lockedUntilMs = 0L
                 _state.value = LoginUiState.Success
             } catch (e: HttpException) {
                 recordFailure()
@@ -78,10 +76,12 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun recordFailure() {
-        failedAttempts++
-        if (failedAttempts >= 5) {
-            lockedUntil = System.currentTimeMillis() + 30_000L
-            failedAttempts = 0
+        val attempts = session.failedLoginAttempts + 1
+        if (attempts >= 5) {
+            session.lockedUntilMs = System.currentTimeMillis() + 30_000L
+            session.failedLoginAttempts = 0
+        } else {
+            session.failedLoginAttempts = attempts
         }
     }
 }

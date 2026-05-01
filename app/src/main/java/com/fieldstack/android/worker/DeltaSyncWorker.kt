@@ -32,7 +32,7 @@ class DeltaSyncWorker @AssistedInject constructor(
         val userId = session.userId ?: return Result.failure()
         return try {
             val since = prefs.lastSyncTimestamp.first() ?: 0L
-            val remoteDelta = api.getTasksDelta(userId, since).map { it.toDomain() }
+            val remoteDelta = api.getTasksDelta(since).map { it.toDomain() }
 
             if (remoteDelta.isNotEmpty()) {
                 val localMap = taskDao.observeAll().first()

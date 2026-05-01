@@ -43,19 +43,19 @@ class AuthViewModelTest {
 
     @Test
     fun `blank email shows error`() = runTest {
-        viewModel.login("", "password")
+        viewModel.login("", "not-a-real-password")
         assertTrue(viewModel.state.value is LoginUiState.Error)
     }
 
     @Test
     fun `invalid email shows error`() = runTest {
-        viewModel.login("not-an-email", "password")
+        viewModel.login("not-an-email", "not-a-real-password")
         assertEquals(LoginUiState.Error("Enter a valid email address"), viewModel.state.value)
     }
 
     @Test
     fun `valid credentials transition to Success and persist session`() = runTest {
-        viewModel.login("alex@fieldstack.com", "secret")
+        viewModel.login("test@example.invalid", "not-a-real-password")
         advanceUntilIdle()
         assertEquals(LoginUiState.Success, viewModel.state.value)
         assertTrue(session.isLoggedIn)
@@ -63,7 +63,7 @@ class AuthViewModelTest {
 
     @Test
     fun `logout clears session and resets state`() = runTest {
-        viewModel.login("alex@fieldstack.com", "secret")
+        viewModel.login("test@example.invalid", "not-a-real-password")
         advanceUntilIdle()
         viewModel.logout()
         assertEquals(LoginUiState.Idle, viewModel.state.value)

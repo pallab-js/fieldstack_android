@@ -10,6 +10,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -20,6 +21,19 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    /**
+     * Fix #9: Certificate pins for api.fieldstack.com.
+     * Obtain the current pin by running:
+     *   openssl s_client -connect api.fieldstack.com:443 | \
+     *     openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
+     *     openssl dgst -sha256 -binary | base64
+     * Include at least two pins (leaf + backup/intermediate) to allow rotation.
+     */
+    private val CERT_PINNER = CertificatePinner.Builder()
+        .add("api.fieldstack.com", "sha256/REPLACE_WITH_LEAF_CERT_PIN=")
+        .add("api.fieldstack.com", "sha256/REPLACE_WITH_BACKUP_CERT_PIN=")
+        .build()
 
     @Provides @Singleton
     fun provideMoshi(): Moshi = Moshi.Builder()
@@ -37,12 +51,11 @@ object NetworkModule {
                 redactHeader("Cookie")
             })
             .authenticator { _, response ->
-                // On 401, clear session so the app redirects to login on next navigation
-                if (response.code == 401) {
-                    session.clear()
-                }
-                null // cancel the request; UI observes session.isLoggedIn
+                if (response.code == 401) session.clear()
+                null
             }
+            // Fix #9: only pin in release/staging; skip in debug so Charles/Proxyman work
+            .apply { if (!BuildConfig.DEBUG) certificatePinner(CERT_PINNER) }
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()

@@ -13,7 +13,7 @@ interface FieldStackApi {
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
     @GET("tasks")
-    suspend fun getTasks(@Query("user_id") userId: String): List<TaskDto>
+    suspend fun getTasks(): List<TaskDto>
 
     @GET("tasks/{id}")
     suspend fun getTask(@Path("id") id: String): TaskDto
@@ -32,10 +32,7 @@ interface FieldStackApi {
 
     /** Delta sync — only records updated after [since] epoch millis */
     @GET("tasks/delta")
-    suspend fun getTasksDelta(
-        @Query("user_id") userId: String,
-        @Query("since") since: Long,
-    ): List<TaskDto>
+    suspend fun getTasksDelta(@Query("since") since: Long): List<TaskDto>
 
     // ── Admin ──────────────────────────────────────────────────────────────
 

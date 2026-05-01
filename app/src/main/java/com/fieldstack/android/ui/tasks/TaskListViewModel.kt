@@ -2,16 +2,17 @@ package com.fieldstack.android.ui.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fieldstack.android.data.repository.FakeData
 import com.fieldstack.android.domain.model.Task
 import com.fieldstack.android.domain.model.TaskStatus
 import com.fieldstack.android.domain.usecase.GetTasksUseCase
+import com.fieldstack.android.util.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -21,12 +22,13 @@ enum class TaskFilter { All, Today, Pending, Completed }
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
     getTasks: GetTasksUseCase,
+    session: SessionManager,
 ) : ViewModel() {
 
     val filter = MutableStateFlow(TaskFilter.All)
     val query  = MutableStateFlow("")
 
-    private val allTasks = getTasks(FakeData.USER_ID)
+    private val allTasks = session.userId?.let { getTasks(it) } ?: flowOf(emptyList())
 
     val tasks = combine(allTasks, filter, query) { list, f, q ->
         list

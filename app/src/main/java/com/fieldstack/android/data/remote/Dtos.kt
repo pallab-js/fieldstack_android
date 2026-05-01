@@ -50,6 +50,7 @@ data class LoginResponse(
     val token: String,
     @Json(name = "user_id") val userId: String,
     val name: String,
+    val email: String = "",
     val role: String = "FieldTech",
 )
 

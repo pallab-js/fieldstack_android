@@ -2,20 +2,21 @@ package com.fieldstack.android.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fieldstack.android.data.repository.FakeData
 import com.fieldstack.android.data.repository.FieldStackRepository
 import com.fieldstack.android.data.repository.SyncState
 import com.fieldstack.android.domain.model.Task
 import com.fieldstack.android.domain.model.TaskStatus
 import com.fieldstack.android.ui.components.SyncBadgeState
+import com.fieldstack.android.util.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 data class DashboardUiState(
-    val userName: String = "Alex",
+    val userName: String = "",
     val tasks: List<Task> = emptyList(),
     val syncBadge: SyncBadgeState = SyncBadgeState.Synced,
     val isOnline: Boolean = true,
@@ -28,17 +29,18 @@ data class DashboardUiState(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val repository: FieldStackRepository,
-    private val session: com.fieldstack.android.util.SessionManager,
+    private val session: SessionManager,
 ) : ViewModel() {
 
     val currentRole get() = session.userRole
 
     val uiState = combine(
-        repository.observeTasks(FakeData.USER_ID),
+        session.userId?.let { repository.observeTasks(it) } ?: flowOf(emptyList()),
         repository.observeSyncState(),
         repository.isOnline(),
     ) { tasks, sync, online ->
         DashboardUiState(
+            userName = session.userName ?: "",
             tasks = tasks,
             syncBadge = when {
                 !online            -> SyncBadgeState.Offline

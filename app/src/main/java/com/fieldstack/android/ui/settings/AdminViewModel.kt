@@ -32,6 +32,10 @@ class AdminViewModel @Inject constructor(
     init { loadUsers() }
 
     private fun loadUsers() = viewModelScope.launch {
+        if (session.userRole != UserRole.Admin) {
+            _uiState.update { it.copy(error = "Access denied") }
+            return@launch
+        }
         _uiState.update { it.copy(isLoading = true, error = null) }
         try {
             val users = api.getUsers().map { dto ->
@@ -41,12 +45,19 @@ class AdminViewModel @Inject constructor(
                 )
             }
             _uiState.update { it.copy(users = users, isLoading = false) }
+        } catch (e: retrofit2.HttpException) {
+            val msg = if (e.code() == 403) "Access denied — Admin role required" else (e.message ?: "Failed to load users")
+            _uiState.update { it.copy(isLoading = false, error = msg) }
         } catch (e: Exception) {
             _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load users") }
         }
     }
 
     fun assignRole(userId: String, role: UserRole) = viewModelScope.launch {
+        if (session.userRole != UserRole.Admin) {
+            _uiState.update { it.copy(error = "Access denied") }
+            return@launch
+        }
         try {
             val updated = api.updateUserRole(userId, RoleUpdateRequest(role.name))
             _uiState.update { state ->
@@ -56,6 +67,9 @@ class AdminViewModel @Inject constructor(
                     ) else u
                 })
             }
+        } catch (e: retrofit2.HttpException) {
+            val msg = if (e.code() == 403) "Access denied — Admin role required" else (e.message ?: "Failed to update role")
+            _uiState.update { it.copy(error = msg) }
         } catch (e: Exception) {
             _uiState.update { it.copy(error = e.message ?: "Failed to update role") }
         }

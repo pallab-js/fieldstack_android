@@ -12,6 +12,10 @@ class AuthInterceptor(private val session: SessionManager) : Interceptor {
                 .addHeader("Authorization", "Bearer $token")
                 .build()
         } else chain.request()
-        return chain.proceed(request)
+        val response = chain.proceed(request)
+        // Fix #3: 403 means the server rejected the role claim — clear session so the
+        // client can't keep retrying with a token the server has already denied.
+        if (response.code == 403) session.clear()
+        return response
     }
 }

@@ -31,8 +31,8 @@ class MvpFlowTest {
 
     @Test
     fun login_withValidCredentials_navigatesToDashboard() {
-        composeRule.onNodeWithContentDescription("Email input").performTextInput("alex@fieldstack.com")
-        composeRule.onNodeWithContentDescription("Password input").performTextInput("secret")
+        composeRule.onNodeWithContentDescription("Email input").performTextInput("test@example.invalid")
+        composeRule.onNodeWithContentDescription("Password input").performTextInput("not-a-real-password")
         composeRule.onNodeWithText("Sign In").performClick()
         composeRule.waitUntil(3_000) {
             composeRule.onAllNodes(

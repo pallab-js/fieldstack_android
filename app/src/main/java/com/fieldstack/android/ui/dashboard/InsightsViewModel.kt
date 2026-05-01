@@ -3,12 +3,13 @@ package com.fieldstack.android.ui.dashboard
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fieldstack.android.data.repository.FakeData
 import com.fieldstack.android.domain.usecase.InsightsUseCase
 import com.fieldstack.android.domain.usecase.WeeklyInsights
+import com.fieldstack.android.util.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import java.io.File
 import java.time.LocalDate
@@ -18,9 +19,10 @@ import javax.inject.Inject
 class InsightsViewModel @Inject constructor(
     @ApplicationContext private val ctx: Context,
     insightsUseCase: InsightsUseCase,
+    session: SessionManager,
 ) : ViewModel() {
 
-    val insights = insightsUseCase(FakeData.USER_ID)
+    val insights = (session.userId?.let { insightsUseCase(it) } ?: flowOf(WeeklyInsights()))
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WeeklyInsights())
 
     fun exportCsv(): File {

@@ -26,9 +26,9 @@ class SettingsViewModel @Inject constructor(
 
     val prefs = combine(store.wifiOnlySync, store.biometricEnabled) { wifi, bio ->
         AppPrefs(
-            userName        = session.userName ?: "",
-            userEmail       = session.userId  ?: "",
-            wifiOnlySync    = wifi,
+            userName         = session.userName ?: "",
+            userEmail        = session.userEmail ?: "",
+            wifiOnlySync     = wifi,
             biometricEnabled = bio,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppPrefs())

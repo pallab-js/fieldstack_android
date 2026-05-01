@@ -18,6 +18,8 @@ import com.fieldstack.android.domain.model.SyncQueueItem
 import com.fieldstack.android.domain.model.SyncStatus
 import com.fieldstack.android.domain.model.Task
 import com.fieldstack.android.domain.model.TaskStatus
+import com.fieldstack.android.domain.model.UserRole
+import com.fieldstack.android.util.SessionManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +40,7 @@ class RealFieldStackRepository @Inject constructor(
     private val reportDao: ReportDao,
     private val syncQueueDao: SyncQueueDao,
     private val api: FieldStackApi,
+    private val session: SessionManager,
 ) : FieldStackRepository {
 
     private val syncState = MutableStateFlow<SyncState>(SyncState.Idle)
@@ -68,7 +71,12 @@ class RealFieldStackRepository @Inject constructor(
         taskDao.observeByUser(userId).map { list -> list.map { it.toDomain() } }
 
     override fun observeTaskById(id: String): Flow<Task?> =
-        taskDao.observeById(id).map { it?.toDomain() }
+        taskDao.observeById(id).map { entity ->
+            entity?.toDomain()?.takeIf { task ->
+                // Fix #4: FieldTech can only see tasks assigned to them
+                session.userRole != UserRole.FieldTech || task.assigneeId == session.userId
+            }
+        }
 
     override suspend fun saveTask(task: Task) = taskDao.upsert(task.toEntity())
 
