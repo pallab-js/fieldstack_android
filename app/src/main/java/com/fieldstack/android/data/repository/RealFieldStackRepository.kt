@@ -1,5 +1,10 @@
 package com.fieldstack.android.data.repository
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import com.fieldstack.android.data.local.ReportDao
 import com.fieldstack.android.data.local.SyncQueueDao
 import com.fieldstack.android.data.local.TaskDao
@@ -13,8 +18,12 @@ import com.fieldstack.android.domain.model.SyncQueueItem
 import com.fieldstack.android.domain.model.SyncStatus
 import com.fieldstack.android.domain.model.Task
 import com.fieldstack.android.domain.model.TaskStatus
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.time.Instant
@@ -24,6 +33,7 @@ import javax.inject.Singleton
 
 @Singleton
 class RealFieldStackRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val taskDao: TaskDao,
     private val reportDao: ReportDao,
     private val syncQueueDao: SyncQueueDao,
@@ -31,7 +41,26 @@ class RealFieldStackRepository @Inject constructor(
 ) : FieldStackRepository {
 
     private val syncState = MutableStateFlow<SyncState>(SyncState.Idle)
-    private val online    = MutableStateFlow(true)
+
+    // ── Connectivity ───────────────────────────────────────────────────────
+
+    override fun isOnline(): Flow<Boolean> = callbackFlow {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                trySend(caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
+            }
+            override fun onLost(network: Network) { trySend(false) }
+        }
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        cm.registerNetworkCallback(request, callback)
+        // Emit current state immediately
+        val active = cm.activeNetwork?.let { cm.getNetworkCapabilities(it) }
+        trySend(active?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true)
+        awaitClose { cm.unregisterNetworkCallback(callback) }
+    }
 
     // ── Tasks ──────────────────────────────────────────────────────────────
 
@@ -44,10 +73,8 @@ class RealFieldStackRepository @Inject constructor(
     override suspend fun saveTask(task: Task) = taskDao.upsert(task.toEntity())
 
     override suspend fun updateTaskStatus(taskId: String, status: TaskStatus) {
-        taskDao.observeById(taskId).collect { entity ->
-            entity?.let {
-                taskDao.update(it.copy(status = status, updatedAt = Instant.now()))
-            }
+        taskDao.observeById(taskId).first()?.let { entity ->
+            taskDao.update(entity.copy(status = status, updatedAt = Instant.now()))
         }
     }
 
@@ -76,30 +103,33 @@ class RealFieldStackRepository @Inject constructor(
         syncQueueDao.observePending().map { list -> list.map { it.toDomain() } }
 
     override fun observeSyncState(): Flow<SyncState> = syncState
-    override fun isOnline(): Flow<Boolean> = online
 
     override suspend fun syncPendingChanges(): SyncState {
         val pending = syncQueueDao.getPending()
         if (pending.isEmpty()) return SyncState.Synced.also { syncState.value = it }
 
         syncState.value = SyncState.Syncing
-        return try {
-            pending.forEach { item ->
+        var failed = 0
+        pending.forEach { item ->
+            try {
                 when (item.entityType) {
                     "report" -> {
-                        val entity = reportDao.observeByTask("").map { it }.let {
-                            // fetch report by entityId via a direct query isn't in DAO;
-                            // submit via API using stored data
-                        }
-                        // Best-effort: mark synced (real impl queries by entityId)
-                        syncQueueDao.markSynced(item.id)
+                        val entity = reportDao.getById(item.entityId)
+                            ?: error("Report ${item.entityId} not found")
+                        api.submitReport(entity.toDomain().toDto())
                         reportDao.updateSyncStatus(item.entityId, SyncStatus.Synced.name)
                     }
                 }
+                syncQueueDao.markSynced(item.id)
+            } catch (e: Exception) {
+                syncQueueDao.markFailed(item.id)
+                failed++
             }
+        }
+        return if (failed == 0) {
             SyncState.Synced.also { syncState.value = it }
-        } catch (e: Exception) {
-            SyncState.Error(e.message ?: "Sync failed").also { syncState.value = it }
+        } else {
+            SyncState.Error("$failed item(s) failed to sync").also { syncState.value = it }
         }
     }
 }

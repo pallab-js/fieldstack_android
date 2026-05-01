@@ -30,6 +30,7 @@ fun ReportDto.toDomain() = Report(
     createdAt = Instant.ofEpochMilli(createdAt),
     updatedAt = Instant.ofEpochMilli(updatedAt),
     syncStatus = SyncStatus.Synced,
+    customFields = customFields.map { it.toDomain() },
 )
 
 fun Report.toDto() = ReportDto(
@@ -39,4 +40,16 @@ fun Report.toDto() = ReportDto(
     latitude = latitude, longitude = longitude, signatureUri = signatureUri,
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
+    customFields = customFields.map { it.toDto() },
+)
+
+private fun CustomFieldDto.toDomain() = com.fieldstack.android.domain.model.CustomField(
+    id = id, label = label,
+    type = runCatching { com.fieldstack.android.domain.model.CustomFieldType.valueOf(type) }
+        .getOrDefault(com.fieldstack.android.domain.model.CustomFieldType.Text),
+    value = value, required = required,
+)
+
+private fun com.fieldstack.android.domain.model.CustomField.toDto() = CustomFieldDto(
+    id = id, label = label, type = type.name, value = value, required = required,
 )

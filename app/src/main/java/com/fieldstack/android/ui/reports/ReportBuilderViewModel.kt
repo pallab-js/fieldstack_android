@@ -1,12 +1,17 @@
 package com.fieldstack.android.ui.reports
 
+import android.content.Context
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fieldstack.android.domain.model.Report
 import com.fieldstack.android.domain.model.ReportCategory
 import com.fieldstack.android.domain.usecase.SaveReportUseCase
+import com.fieldstack.android.util.ImageCompressor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -44,6 +49,8 @@ sealed interface SaveState { data object Idle : SaveState; data object Saving : 
 class ReportBuilderViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val saveReport: SaveReportUseCase,
+    private val imageCompressor: ImageCompressor,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val taskId: String = savedState["taskId"] ?: ""
@@ -68,7 +75,10 @@ class ReportBuilderViewModel @Inject constructor(
     fun setNotes(v: String)    = _draft.update { it.copy(notes = v) }
 
     // Step 3
-    fun addPhoto(uri: String)  = _draft.update { it.copy(photoUris = it.photoUris + uri) }
+    fun addPhoto(uri: String) = viewModelScope.launch {
+        val compressed = imageCompressor.compress(context, uri.toUri()).toString()
+        _draft.update { it.copy(photoUris = it.photoUris + compressed) }
+    }
     fun removePhoto(uri: String) = _draft.update { it.copy(photoUris = it.photoUris - uri) }
 
     // Step 4
@@ -124,6 +134,7 @@ class ReportBuilderViewModel @Inject constructor(
         latitude = _draft.value.latitude,
         longitude = _draft.value.longitude,
         signatureUri = _draft.value.signatureUri,
+        customFields = _draft.value.customFields,
         createdAt = Instant.now(),
         updatedAt = Instant.now(),
     )

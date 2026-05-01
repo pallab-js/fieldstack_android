@@ -17,13 +17,13 @@ fun Task.toEntity() = TaskEntity(
 fun ReportEntity.toDomain() = Report(
     id, taskId, title, category, details,
     photoUris, latitude, longitude, signatureUri,
-    createdAt, updatedAt, syncStatus,
+    createdAt, updatedAt, syncStatus, customFields,
 )
 
 fun Report.toEntity() = ReportEntity(
     id, taskId, title, category, details,
     photoUris, latitude, longitude, signatureUri,
-    createdAt, updatedAt, syncStatus,
+    createdAt, updatedAt, syncStatus, customFields,
 )
 
 fun SyncQueueEntity.toDomain() = SyncQueueItem(

@@ -1,10 +1,14 @@
 package com.fieldstack.android.ui.reports
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
-import app.cash.turbine.test
 import com.fieldstack.android.data.repository.FakeFieldStackRepository
 import com.fieldstack.android.domain.model.ReportCategory
 import com.fieldstack.android.domain.usecase.SaveReportUseCase
+import com.fieldstack.android.util.ImageCompressor
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -24,13 +28,21 @@ class ReportBuilderViewModelTest {
 
     private lateinit var viewModel: ReportBuilderViewModel
     private val dispatcher = StandardTestDispatcher()
+    private val compressor = mockk<ImageCompressor>()
+    private val context = mockk<Context>()
 
     @Before
     fun setup() {
         Dispatchers.setMain(dispatcher)
+        // No-op compressor: return the same URI that was passed in
+        coEvery { compressor.compress(any(), any(), any(), any()) } answers {
+            secondArg<Uri>()
+        }
         viewModel = ReportBuilderViewModel(
             savedState = SavedStateHandle(mapOf("taskId" to "t1")),
             saveReport = SaveReportUseCase(FakeFieldStackRepository()),
+            imageCompressor = compressor,
+            context = context,
         )
     }
 
@@ -84,16 +96,19 @@ class ReportBuilderViewModelTest {
     }
 
     @Test
-    fun `addPhoto appends to draft`() = runTest {
+    fun `addPhoto compresses and appends to draft`() = runTest {
         viewModel.addPhoto("file://photo1.jpg")
         viewModel.addPhoto("file://photo2.jpg")
+        advanceUntilIdle()
         assertEquals(2, viewModel.draft.value.photoUris.size)
     }
 
     @Test
     fun `removePhoto removes from draft`() = runTest {
         viewModel.addPhoto("file://photo1.jpg")
-        viewModel.removePhoto("file://photo1.jpg")
+        advanceUntilIdle()
+        val stored = viewModel.draft.value.photoUris.first()
+        viewModel.removePhoto(stored)
         assertEquals(0, viewModel.draft.value.photoUris.size)
     }
 
