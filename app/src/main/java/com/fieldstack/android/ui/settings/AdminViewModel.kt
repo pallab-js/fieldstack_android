@@ -48,10 +48,10 @@ class AdminViewModel @Inject constructor(
             }
             _uiState.update { it.copy(users = users, isLoading = false) }
         } catch (e: retrofit2.HttpException) {
-            val msg = if (e.code() == 403) "Access denied — Admin role required" else (e.message ?: "Failed to load users")
+            val msg = if (e.code() == 403) "Access denied — Admin role required" else "Failed to load users"
             _uiState.update { it.copy(isLoading = false, error = msg) }
         } catch (e: Exception) {
-            _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load users") }
+            _uiState.update { it.copy(isLoading = false, error = "Failed to load users") }
         }
     }
 
@@ -71,10 +71,10 @@ class AdminViewModel @Inject constructor(
                 })
             }
         } catch (e: retrofit2.HttpException) {
-            val msg = if (e.code() == 403) "Access denied — Admin role required" else (e.message ?: "Failed to update role")
+            val msg = if (e.code() == 403) "Access denied — Admin role required" else "Failed to update role"
             _uiState.update { it.copy(error = msg) }
         } catch (e: Exception) {
-            _uiState.update { it.copy(error = e.message ?: "Failed to update role") }
+            _uiState.update { it.copy(error = "Failed to update role") }
         }
     }
 }

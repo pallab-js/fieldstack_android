@@ -14,7 +14,6 @@ import com.fieldstack.android.util.AppPrefsStore
 import com.fieldstack.android.util.SessionManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.first
 
 @HiltWorker
 class DeltaSyncWorker @AssistedInject constructor(
@@ -35,8 +34,8 @@ class DeltaSyncWorker @AssistedInject constructor(
             val remoteDelta = api.getTasksDelta(since).map { it.toDomain() }
 
             if (remoteDelta.isNotEmpty()) {
-                val localMap = taskDao.observeAll().first()
-                    .associate { it.id to it.toDomain() }
+                val remoteIds = remoteDelta.map { it.id }
+                val localMap = taskDao.getByIds(remoteIds).associate { it.id to it.toDomain() }
                 val mergeResult = mergeTasks(localMap, remoteDelta)
                 mergeResult.toUpsert.forEach { taskDao.upsert(it.toEntity()) }
 

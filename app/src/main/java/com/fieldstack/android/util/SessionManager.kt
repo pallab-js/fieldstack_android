@@ -62,8 +62,10 @@ class SessionManager @Inject constructor(@ApplicationContext private val ctx: Co
     fun clear() {
         prefs.edit().clear().apply()
         ctx.cacheDir.listFiles()?.forEach { it.delete() }
-        ctx.filesDir.listFiles { f -> f.name.startsWith("insights_") && f.name.endsWith(".csv") }
-            ?.forEach { it.delete() }
+        ctx.filesDir.listFiles { f ->
+            (f.name.startsWith("insights_") && f.name.endsWith(".csv")) ||
+            (f.name.startsWith("report_") && f.name.endsWith(".pdf"))
+        }?.forEach { it.delete() }
     }
 
     private fun isTokenExpired(jwt: String): Boolean {

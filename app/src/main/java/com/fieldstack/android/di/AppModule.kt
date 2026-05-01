@@ -20,7 +20,7 @@ object AppModule {
     @Provides @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): FieldStackDatabase =
         Room.databaseBuilder(ctx, FieldStackDatabase::class.java, "fieldstack.db")
-            .addMigrations(FieldStackDatabase.MIGRATION_2_3)
+            .addMigrations(FieldStackDatabase.MIGRATION_2_3, FieldStackDatabase.MIGRATION_3_4)
             .build()
 
     @Provides fun provideTaskDao(db: FieldStackDatabase): TaskDao = db.taskDao()

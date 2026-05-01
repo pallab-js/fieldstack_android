@@ -43,7 +43,12 @@ data class ReportDraft(
 
 enum class DraftPriority { Low, Medium, High }
 
-sealed interface SaveState { data object Idle : SaveState; data object Saving : SaveState; data object Saved : SaveState }
+sealed interface SaveState {
+    data object Idle : SaveState
+    data object Saving : SaveState
+    data object Saved : SaveState
+    data class Error(val message: String) : SaveState
+}
 
 @HiltViewModel
 class ReportBuilderViewModel @Inject constructor(
@@ -76,6 +81,7 @@ class ReportBuilderViewModel @Inject constructor(
 
     // Step 3
     fun addPhoto(uri: String) = viewModelScope.launch {
+        if (_draft.value.photoUris.size >= MAX_PHOTOS) return@launch
         val compressed = imageCompressor.compress(context, uri.toUri()).toString()
         _draft.update { it.copy(photoUris = it.photoUris + compressed) }
     }
@@ -114,14 +120,26 @@ class ReportBuilderViewModel @Inject constructor(
 
     fun saveDraft() = viewModelScope.launch {
         _saveState.value = SaveState.Saving
-        saveReport(buildReport())
-        _saveState.value = SaveState.Saved
+        _saveState.value = try {
+            saveReport(buildReport())
+            SaveState.Saved
+        } catch (e: Exception) {
+            SaveState.Error(e.message ?: "Save failed")
+        }
     }
 
     fun submit() = viewModelScope.launch {
         _saveState.value = SaveState.Saving
-        saveReport(buildReport())
-        _saveState.value = SaveState.Saved
+        _saveState.value = try {
+            saveReport(buildReport())
+            SaveState.Saved
+        } catch (e: Exception) {
+            SaveState.Error(e.message ?: "Submit failed")
+        }
+    }
+
+    companion object {
+        const val MAX_PHOTOS = 10
     }
 
     private fun buildReport() = Report(

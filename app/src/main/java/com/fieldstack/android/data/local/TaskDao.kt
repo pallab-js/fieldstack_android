@@ -5,6 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.fieldstack.android.domain.model.TaskStatus
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -32,4 +34,10 @@ interface TaskDao {
 
     @Query("SELECT * FROM tasks WHERE syncStatus = 'Pending'")
     suspend fun getPending(): List<TaskEntity>
+
+    @Query("SELECT * FROM tasks WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<String>): List<TaskEntity>
+
+    @Query("UPDATE tasks SET status = :status, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateStatus(id: String, status: TaskStatus, updatedAt: Instant)
 }

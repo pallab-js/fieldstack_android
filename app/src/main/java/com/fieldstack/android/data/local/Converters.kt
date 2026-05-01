@@ -27,9 +27,14 @@ class Converters {
     @TypeConverter fun fromSyncStatus(v: SyncStatus): String = v.name
     @TypeConverter fun toSyncStatus(v: String): SyncStatus = SyncStatus.valueOf(v)
 
-    @TypeConverter fun fromStringList(v: List<String>): String = v.joinToString("|")
-    @TypeConverter fun toStringList(v: String): List<String> =
-        if (v.isEmpty()) emptyList() else v.split("|")
+    @TypeConverter fun fromStringList(v: List<String>): String = JSONArray(v).toString()
+    @TypeConverter fun toStringList(v: String): List<String> {
+        if (v.isEmpty() || v == "[]") return emptyList()
+        // Legacy: handle old pipe-delimited values written before this fix
+        if (!v.startsWith("[")) return v.split("|").filter { it.isNotEmpty() }
+        val arr = JSONArray(v)
+        return (0 until arr.length()).map { arr.getString(it) }
+    }
 
     @TypeConverter
     fun fromCustomFields(fields: List<CustomField>): String {
