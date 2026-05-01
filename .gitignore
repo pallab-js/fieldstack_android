@@ -32,3 +32,8 @@ firebase-service-account.json
 
 # Graphify output
 graphify-out/
+
+# Blueprint / design docs (AI dev artifacts, not for repo)
+*Blueprint*.md
+*DESIGN*.md
+*Enhancements and Optimizations*.md
